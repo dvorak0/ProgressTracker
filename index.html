@@ -116,9 +116,10 @@
                 const remainingPercentage = 100 - progressLog[progressLog.length - 1].percentage;
                 const remainingTime = remainingPercentage / currentRate * (1000 * 60 * 60); // Remaining time in milliseconds
                 const estimatedFinishTime = new Date(progressLog[progressLog.length - 1].time + remainingTime);
+                const elapsedTimeSinceUpdate = new Date().getTime() - progressLog[progressLog.length - 1].time;
 
                 estimateContainer.innerHTML = `<h3>Estimate:</h3>
-                                               <p>Remaining Time: ${formatTime(remainingTime)}</p>
+                                               <p>Remaining Time: ${formatTime(remainingTime - elapsedTimeSinceUpdate)}</p>
                                                <p>Estimated Finish Time: ${estimatedFinishTime.toLocaleString()}</p>`;
             } else {
                 estimateContainer.innerHTML = "<p>Please log at least two progress points to estimate time.</p>";
@@ -150,7 +151,10 @@
         }
 
         updateLog();
-        estimateTime();
+        // interval to update the time every second
+        setInterval(() => {
+          estimateTime();
+        }, 1000);
     </script>
 </body>
 </html>
