@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Progress Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        input[type="number"] {
+            width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Progress Tracker</h1>
+    <p>Enter the current percentage:</p>
+    <input type="number" id="percentageInput" min="0" max="100" step="1">
+    <button onclick="logProgress()">Log Progress</button>
+    <br><br>
+    <div id="logContainer"></div>
+    <br>
+    <div id="estimateContainer"></div>
+
+    <script>
+        let progressLog = [];
+
+        function logProgress() {
+            const percentage = document.getElementById("percentageInput").value;
+            const currentTime = new Date();
+
+            if (percentage >= 0 && percentage <= 100) {
+                progressLog.push({ percentage: parseInt(percentage), time: currentTime });
+                updateLog();
+                estimateTime();
+            } else {
+                alert("Please enter a valid percentage (0-100).");
+            }
+        }
+
+        function updateLog() {
+            const logContainer = document.getElementById("logContainer");
+            logContainer.innerHTML = "<h3>Progress Log:</h3>";
+            progressLog.forEach((entry, index) => {
+                logContainer.innerHTML += `<p>${index + 1}. ${entry.percentage}% at ${entry.time.toLocaleTimeString()}</p>`;
+            });
+        }
+
+        function estimateTime() {
+            const estimateContainer = document.getElementById("estimateContainer");
+            if (progressLog.length >= 2) {
+                const totalTime = progressLog[progressLog.length - 1].time - progressLog[0].time;
+                const elapsedTime = totalTime * (progressLog[progressLog.length - 1].percentage / 100);
+                const remainingTime = totalTime - elapsedTime;
+                const estimatedFinishTime = new Date(progressLog[progressLog.length - 1].time.getTime() + remainingTime);
+
+                estimateContainer.innerHTML = `<h3>Estimate:</h3>
+                                               <p>Remaining Time: ${formatTime(remainingTime)}</p>
+                                               <p>Estimated Finish Time: ${estimatedFinishTime.toLocaleString()}</p>`;
+            } else {
+                estimateContainer.innerHTML = "<p>Please log at least two progress points to estimate time.</p>";
+            }
+        }
+
+        function formatTime(ms) {
+            const seconds = Math.floor((ms / 1000) % 60);
+            const minutes = Math.floor((ms / (1000 * 60)) % 60);
+            const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>
