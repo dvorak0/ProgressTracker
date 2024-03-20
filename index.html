@@ -56,22 +56,29 @@
     <p>Enter the current percentage:</p>
     <input type="number" id="percentageInput" min="0" max="100" step="1">
     <button onclick="logProgress()">Log Progress</button>
+    <button onclick="clearProgress()">Clear</button>
     <br><br>
     <div id="logContainer"></div>
     <br>
     <div id="estimateContainer"></div>
 
     <script>
-        let progressLog = [];
+        let progressLog = loadProgressFromStorage();
+
+        function loadProgressFromStorage() {
+            const storedProgress = localStorage.getItem('progressLog');
+            return storedProgress ? JSON.parse(storedProgress) : [];
+        }
 
         function logProgress() {
             const percentage = document.getElementById("percentageInput").value;
-            const currentTime = new Date();
+            const currentTime = new Date().getTime();
 
             if (percentage >= 0 && percentage <= 100) {
                 progressLog.push({ percentage: parseInt(percentage), time: currentTime });
                 updateLog();
                 estimateTime();
+                saveProgress();
             } else {
                 alert("Please enter a valid percentage (0-100).");
             }
@@ -80,9 +87,14 @@
         function updateLog() {
             const logContainer = document.getElementById("logContainer");
             logContainer.innerHTML = "<h3>Progress Log:</h3>";
-            progressLog.forEach((entry, index) => {
-                logContainer.innerHTML += `<p>${index + 1}. ${entry.percentage}% at ${entry.time.toLocaleTimeString()}</p>`;
-            });
+            if (progressLog.length === 0) {
+                logContainer.innerHTML += "<p>No progress logged yet.</p>";
+            } else {
+                progressLog.forEach((entry, index) => {
+                    const logTime = new Date(entry.time);
+                    logContainer.innerHTML += `<p>${index + 1}. ${entry.percentage}% at ${logTime.toLocaleTimeString()}</p>`;
+                });
+            }
         }
 
         function estimateTime() {
@@ -91,7 +103,7 @@
                 const totalTime = progressLog[progressLog.length - 1].time - progressLog[0].time;
                 const elapsedTime = totalTime * (progressLog[progressLog.length - 1].percentage / 100);
                 const remainingTime = totalTime - elapsedTime;
-                const estimatedFinishTime = new Date(progressLog[progressLog.length - 1].time.getTime() + remainingTime);
+                const estimatedFinishTime = new Date(progressLog[progressLog.length - 1].time + remainingTime);
 
                 estimateContainer.innerHTML = `<h3>Estimate:</h3>
                                                <p>Remaining Time: ${formatTime(remainingTime)}</p>
@@ -108,6 +120,20 @@
 
             return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
+
+        function clearProgress() {
+            progressLog = [];
+            updateLog();
+            estimateTime();
+            saveProgress();
+        }
+
+        function saveProgress() {
+            localStorage.setItem('progressLog', JSON.stringify(progressLog));
+        }
+
+        updateLog();
+        estimateTime();
     </script>
 </body>
 </html>
