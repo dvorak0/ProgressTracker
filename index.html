@@ -54,7 +54,7 @@
 <body>
     <h1>Progress Tracker</h1>
     <p>Enter the current percentage:</p>
-    <input type="number" id="percentageInput" min="0" max="100" step="1">
+    <input type="number" id="percentageInput" min="0" max="100" step="0.01">
     <button onclick="logProgress()">Log Progress</button>
     <button onclick="clearProgress()">Clear</button>
     <br><br>
@@ -71,11 +71,11 @@
         }
 
         function logProgress() {
-            const percentage = document.getElementById("percentageInput").value;
+            const percentage = parseFloat(document.getElementById("percentageInput").value);
             const currentTime = new Date().getTime();
 
             if (percentage >= 0 && percentage <= 100) {
-                progressLog.push({ percentage: parseInt(percentage), time: currentTime });
+                progressLog.push({ percentage: percentage, time: currentTime });
                 updateLog();
                 estimateTime();
                 saveProgress();
@@ -92,7 +92,7 @@
             } else {
                 progressLog.forEach((entry, index) => {
                     const logTime = new Date(entry.time);
-                    logContainer.innerHTML += `<p>${index + 1}. ${entry.percentage}% at ${logTime.toLocaleTimeString()}</p>`;
+                    logContainer.innerHTML += `<p>${index + 1}. ${entry.percentage.toFixed(2)}% at ${logTime.toLocaleTimeString()}</p>`;
                 });
             }
         }
@@ -100,9 +100,21 @@
         function estimateTime() {
             const estimateContainer = document.getElementById("estimateContainer");
             if (progressLog.length >= 2) {
-                const totalTime = progressLog[progressLog.length - 1].time - progressLog[0].time;
-                const elapsedTime = totalTime * (progressLog[progressLog.length - 1].percentage / 100);
-                const remainingTime = totalTime - elapsedTime;
+                let totalTime = 0;
+                let elapsedTime = 0;
+                let currentRate = 0;
+
+                for (let i = 1; i < progressLog.length; i++) {
+                    const timeDiff = progressLog[i].time - progressLog[i - 1].time;
+                    const percentageDiff = progressLog[i].percentage - progressLog[i - 1].percentage;
+                    const rate = percentageDiff / (timeDiff / (1000 * 60 * 60)); // Rate in percentage per hour
+                    currentRate = rate;
+                    totalTime += timeDiff;
+                    elapsedTime += timeDiff * (progressLog[i - 1].percentage / 100);
+                }
+
+                const remainingPercentage = 100 - progressLog[progressLog.length - 1].percentage;
+                const remainingTime = remainingPercentage / currentRate * (1000 * 60 * 60); // Remaining time in milliseconds
                 const estimatedFinishTime = new Date(progressLog[progressLog.length - 1].time + remainingTime);
 
                 estimateContainer.innerHTML = `<h3>Estimate:</h3>
@@ -117,8 +129,13 @@
             const seconds = Math.floor((ms / 1000) % 60);
             const minutes = Math.floor((ms / (1000 * 60)) % 60);
             const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
+            const days = Math.floor(ms / (1000 * 60 * 60 * 24));
 
-            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (days > 0) {
+                return `${days} day${days > 1 ? 's' : ''} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
         }
 
         function clearProgress() {
@@ -137,3 +154,4 @@
     </script>
 </body>
 </html>
+.
